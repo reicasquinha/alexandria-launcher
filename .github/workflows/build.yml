@@ -19,37 +19,35 @@ jobs:
       with:
         node-version: '20.x'
         
+    - name: Check directory structure
+      run: dir
+      
+    - name: Navigate to launcher directory if needed
+      run: |
+        if exist "CustomLauncher" cd CustomLauncher
+        dir
+        
     - name: Install dependencies
       run: npm install
       
     - name: Build launcher for Windows
       run: npm run dist:win
       
-    - name: Upload Windows installer
-      uses: actions/upload-artifact@v3
-      with:
-        name: windows-installer
-        path: dist/*.exe
+    - name: List dist directory
+      run: |
+        dir dist
         
     - name: Create Release
       id: create_release
+      uses: softprops/action-gh-release@v1
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: v${{ github.run_number }}
-        release_name: Alexandria Launcher v${{ github.run_number }}
+        name: Alexandria Launcher v${{ github.run_number }}
         draft: false
         prerelease: false
-        
-    - name: Upload Release Asset
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: actions/upload-release-asset@v1
+        files: |
+          ./dist/*.exe
+          ./CustomLauncher/dist/*.exe
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/Custom-Minecraft-Launcher-setup-1.0.0.exe
-        asset_name: Alexandria-Launcher-setup.exe
-        asset_content_type: application/octet-stream
